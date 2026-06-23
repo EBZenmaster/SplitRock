@@ -1,0 +1,43 @@
+name: Daily EOD Fetch (SPX + 10yr Treasury)
+
+# Runs automatically every weekday evening after US markets close,
+# and can also be triggered manually from the Actions tab.
+#
+# Schedule note: GitHub Actions cron runs in UTC. 21:30 UTC is
+# 4:30pm ET during EDT (summer) and 5:30pm ET during EST (winter) --
+# either way it's after the 4:00pm ET market close. Adjust the cron
+# expression below if you want a different buffer.
+on:
+  schedule:
+    - cron: '30 21 * * 1-5'   # 21:30 UTC, Monday-Friday
+  workflow_dispatch: {}        # lets you click "Run workflow" manually anytime
+
+permissions:
+  contents: write   # needed so the workflow can commit the updated data file
+
+jobs:
+  fetch-and-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Fetch SPX + 10yr Treasury close
+        run: node scripts/fetch-eod.js
+
+      - name: Commit updated data file
+        run: |
+          git config user.name "eod-bot"
+          git config user.email "eod-bot@users.noreply.github.com"
+          git add data/eod-history.json
+          if git diff --staged --quiet; then
+            echo "No changes to commit (data unchanged)."
+          else
+            git commit -m "Daily EOD update: $(date -u +'%Y-%m-%d')"
+            git push
+          fi
