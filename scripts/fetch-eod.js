@@ -77,7 +77,7 @@ async function main() {
         // ^TNX quotes the yield x10 (e.g. 42.50 means 4.25%). Store as a
         // decimal rate (0.0425) to match what the dashboard expects.
         // price=42.85 -> yield%=4.285 -> decimal=0.04285
-        history.tnx[quote.date] = Math.round((quote.price / 1000) * 1000000) / 1000000;
+        history.tnx[quote.date] = Math.round((yieldPct / 100) * 1000000) / 1000000;
       }
       anySuccess = true;
       console.log(`✓ ${symbol}: ${quote.price} on ${quote.date}`);
